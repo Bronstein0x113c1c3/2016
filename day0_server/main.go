@@ -3,22 +3,35 @@ package main
 import (
 	"fmt"
 	"net"
-	"os"
-	"os/signal"
 )
 
-func handle_conn(c net.Conn, c chan os.Signal)
+func handle_conn(c net.Conn) {
+	// for {
+	// 	select {
+	// 	case <-ctx.Done():
+	// 		c.Write([]byte(fmt.Sprintf("%v: Done", c.RemoteAddr())))
+	// 		return
+	// 	default:
+	// 		c.Write([]byte("Bonjour"))
+	// 	}
+	// }
+	fmt.Fprint(c, "Bonjour")
+	return
+}
 func main() {
-	signal_chan := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt)
-	endpoint, _ := net.ResolveTCPAddr("tcp4", ":1807")
-	listener, _ := net.ListenTCP("tcp4", endpoint)
+	// wg := &sync.WaitGroup{}
+	// ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	// defer stop()
+
+	listener, _ := net.Listen("tcp", "localhost:1807")
+	// go func() {
+	// 	<-ctx.Done()
+	// }()
 	for {
-		conn, err := listener.AcceptTCP()
+		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println(err)
 		}
-		handle_conn(conn)
+		go handle_conn(conn)
 	}
-
 }

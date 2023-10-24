@@ -34,13 +34,29 @@ func testB(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}
 }
+func testC(ctx context.Context, wg *sync.WaitGroup) {
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Done C")
+			wg.Done()
+			fmt.Println("C gone!")
+			return
+		default:
+			fmt.Println("3")
+		}
+	}
+
+}
 func main() {
 	wg := &sync.WaitGroup{}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	wg.Add(2)
+	wg.Add(3)
 	go testA(ctx, wg)
 	go testB(ctx, wg)
+	go testC(ctx, wg)
+	wg.Wait()
 	<-ctx.Done()
-	stop()
+	// stop()
 }
