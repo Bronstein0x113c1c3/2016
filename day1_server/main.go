@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+var stoped = make(chan bool)
+
 // func handleConnection(conn net.Conn) {
 // 	// Create a channel to listen for OS signals
 // 	sigs := make(chan os.Signal, 1)
@@ -132,30 +134,77 @@ func handleConnection(conn net.Conn, ctx context.Context, wg *sync.WaitGroup) {
 
 //another approach....
 
-func listening(listener net.Listener) <-chan net.Conn {
+func listening(listener net.Listener, ctx context.Context) <-chan net.Conn {
 	res := make(chan net.Conn)
+	// go func() {
+	// 	<-ctx.Done()
+	// 	log.Println("The listening channel is done!")
+	// 	close(res)
+	// }()
+
 	go func() {
 		for {
+			// if ctx.Err() != nil {
+			// 	log.Println("The listening goroutine is done!")
+			// 	return
+			// }
 			conn, err := listener.Accept()
 			if err != nil {
 				fmt.Println("Error when accepting...: ", err)
 			}
-			res <- conn
+			select {
+			case <-ctx.Done():
+				close(res)
+				log.Println("closed the listening channel")
+				listener.Close()
+				log.Println("closed the listener channel")
+				stoped <- true
+				return
+			case res <- conn:
+			}
+
+			// res <- conn
 		}
 	}()
 	return res
 }
 
+// func listening(listener net.Listener, ctx context.Context) <-chan net.Conn {
+// 	res := make(chan net.Conn)
+// 	go func() {
+// 		for {
+// 			select {
+// 			case <-ctx.Done():
+// 				close(res)
+// 				return
+// 			default:
+// 				conn, err := listener.Accept()
+// 				if err != nil {
+// 					fmt.Println("Error when accepting...: ", err)
+// 					continue
+// 				}
+// 				res <- conn
+// 			}
+// 		}
+// 	}()
+// 	return res
+// }
+
 func main() {
-	defer log.Println("Closed listener....")
+	defer log.Println("Done all....")
+	// defer func() {
+	// 	if res := <-stoped; res {
+	// 		log.Println("Closed listener....")
+	// 	}
+	// }()
 	listener, err := net.Listen("tcp", ":3000")
-	defer listener.Close()
 	if err != nil {
 		log.Fatalln("Error when creating listener: ", err)
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	wg := &sync.WaitGroup{}
-	conns := listening(listener)
+
+	conns := listening(listener, ctx)
 	defer cancel()
 	log.Println("Done preparing....")
 	for {
@@ -166,8 +215,12 @@ func main() {
 		case <-ctx.Done():
 			log.Println("Waiting for ....")
 			wg.Wait()
-			log.Println("closing listener...")
+			// log.Println("closing listener...")
 			return
+			// case <-stoped:
+			// 	log.Println("Everything done!")
+			// 	return
+			// }
 		}
 	}
 }
