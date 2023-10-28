@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-var stoped = make(chan bool)
+// var stoped = make(chan bool)
 
 // func handleConnection(conn net.Conn) {
 // 	// Create a channel to listen for OS signals
@@ -57,10 +57,10 @@ var stoped = make(chan bool)
 // 	}(ctx)
 
 // }
-func handleConnection(conn net.Conn, ctx context.Context, wg *sync.WaitGroup) {
+func handleConnection(conn net.Conn, signal chan struct{}, wg *sync.WaitGroup) {
 	for {
 		select {
-		case <-ctx.Done():
+		case <-signal:
 			fmt.Fprintln(conn, "Goodbye")
 			log.Printf("%v: Goodbye! \n", conn.RemoteAddr())
 			conn.Close()
@@ -134,38 +134,35 @@ func handleConnection(conn net.Conn, ctx context.Context, wg *sync.WaitGroup) {
 
 //another approach....
 
-func listening(listener net.Listener, ctx context.Context) <-chan net.Conn {
+func listening(listener net.Listener, signal chan struct{}, wg *sync.WaitGroup) <-chan net.Conn {
 	res := make(chan net.Conn)
 	// go func() {
 	// 	<-ctx.Done()
 	// 	log.Println("The listening channel is done!")
 	// 	close(res)
 	// }()
-
-	go func() {
+	// wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer log.Println("Closed the receiving channel.....")
+		defer wg.Done()
+		defer close(res)
 		for {
-			// if ctx.Err() != nil {
-			// 	log.Println("The listening goroutine is done!")
-			// 	return
-			// }
 			conn, err := listener.Accept()
 			if err != nil {
-				fmt.Println("Error when accepting...: ", err)
+				log.Println("The listener is completely down")
+				return
 			}
 			select {
-			case <-ctx.Done():
-				close(res)
-				log.Println("closed the listening channel")
-				listener.Close()
-				log.Println("closed the listener channel")
-				stoped <- true
+			case <-signal:
+				log.Println("Don't accept any connections at that time.....")
 				return
 			case res <- conn:
 			}
 
 			// res <- conn
 		}
-	}()
+	}(wg)
+	// wg.Wait()
 	return res
 }
 
@@ -191,36 +188,59 @@ func listening(listener net.Listener, ctx context.Context) <-chan net.Conn {
 // }
 
 func main() {
-	defer log.Println("Done all....")
-	// defer func() {
-	// 	if res := <-stoped; res {
-	// 		log.Println("Closed listener....")
-	// 	}
-	// }()
+	defer log.Println("Done closing all.....")
+	defer log.Println("Closed the connection receiving channel")
 	listener, err := net.Listen("tcp", ":3000")
+	defer listener.Close()
 	if err != nil {
-		log.Fatalln("Error when creating listener: ", err)
+		log.Fatalln("Could not create the listener")
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	wg := &sync.WaitGroup{}
 
-	conns := listening(listener, ctx)
+	// done := make(chan struct{})
+	//waiting for os.interrupt....
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
-	log.Println("Done preparing....")
+	// defer func() {
+	// 	<-done
+	// 	log.Println("The listening receiver is closed.....")
+	// }()
+	//Done creating the listener....., other preparation.....
+	connections_signal := make(chan struct{})
+	listener_signal := make(chan struct{})
+	// signal_string := make(chan string)
+	// defer func(signal_string chan string) {
+	// 	<-signal_string
+	// }(signal_string)
+	//also, the wait group to wait for all the connections to close...
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
+	/*two channel are used as switch to turn off .....*/
+	// connections_receiver channel is used to get the connection after accepting, to make a pipeline....
+	wg.Add(1)
+	connections_receiver := listening(listener, listener_signal, wg)
+	log.Println("Done the preparation......")
+
+	/*the main part....
+	- use the loop with:
+		- if get os.interrupt signal, push the connections_signal and listener_signal to the listening goroutine and connection goroutines to start closing by closing the channel.
+			(alerting mechanism)
+		- with each connection from the connection receiver, handle each.
+	*/
+	defer listener.Close()
 	for {
 		select {
-		case conn := <-conns:
-			wg.Add(1)
-			go handleConnection(conn, ctx, wg)
 		case <-ctx.Done():
-			log.Println("Waiting for ....")
-			wg.Wait()
-			// log.Println("closing listener...")
+			// wg.Add(1)
+			log.Println("os.Interrupt received from the keyboard")
+			close(listener_signal)
+			close(connections_signal)
 			return
-			// case <-stoped:
-			// 	log.Println("Everything done!")
-			// 	return
-			// }
+		case conn := <-connections_receiver:
+			wg.Add(1)
+			go handleConnection(conn, connections_signal, wg)
 		}
 	}
+
 }
+
