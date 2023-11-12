@@ -1,0 +1,12 @@
+syntax = "proto3";
+package person;
+option go_package = "/person";
+message Person{
+    string name = 1;
+    string occupation = 2;
+    repeated Email email = 3;
+}
+message Email{
+    string kind = 1;
+    string address = 2;
+}
