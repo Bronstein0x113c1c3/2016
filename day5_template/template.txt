@@ -1,0 +1,3 @@
+{{range .List}}Name: {{.Name}}
+ID: {{.ID}}
+{{end}}
