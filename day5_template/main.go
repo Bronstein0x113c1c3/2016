@@ -7,7 +7,9 @@ import (
 )
 
 func main() {
+
 	t, err := template.ParseFiles("template.txt")
+	
 	if err != nil {
 		log.Println("Some problem in creating template.....")
 		os.Exit(1)

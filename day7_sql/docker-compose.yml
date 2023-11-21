@@ -1,0 +1,14 @@
+version: '3'
+services:
+  gonb:
+    image: janpfeifer/gonb_jupyterlab:latest
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/gonb/notebooks
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: "0x113c1c3"
+    ports:
+      - "3306:3306"
