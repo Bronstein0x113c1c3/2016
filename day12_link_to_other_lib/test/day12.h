@@ -85,6 +85,7 @@ struct GetStudentInfo_return {
 };
 extern struct GetStudentInfo_return GetStudentInfo();
 extern void R(GoInterface i);
+extern void BeAServer(GoInt port);
 
 #ifdef __cplusplus
 }

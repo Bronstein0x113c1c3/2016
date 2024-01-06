@@ -3,7 +3,8 @@ package main
 import "C"
 import (
 	"fmt"
-	"reflect"
+	"log"
+	"net"
 )
 
 // //export MyStruct
@@ -48,20 +49,27 @@ func R(i interface{}) {
 	fmt.Println(i)
 }
 
-func main() {
-	fields := []reflect.StructField{
-		{
-			Name: "Name",
-			Type: reflect.TypeOf(""),
-		},
-		{
-			Name: "Age",
-			Type: reflect.TypeOf(0),
-		},
+//export BeAServer
+func BeAServer(port int) {
+	conn, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
+	if err != nil {
+		return
 	}
-	newType := reflect.StructOf(fields)
-	newObject := reflect.New(newType).Elem()
-	newObject.FieldByName("Name").SetString("K")
-	newObject.FieldByName("Age").SetInt(1)
-	fmt.Println(newObject)
+	log.Println("I'm waiting for someone....")
+	for {
+		newConn, err := conn.Accept()
+		if err != nil {
+			panic(err)
+		}
+		go func(c net.Conn) {
+			for {
+				c.Write([]byte("Bonjour!"))
+			}
+		}(newConn)
+	}
+
+}
+
+func main() {
+
 }
