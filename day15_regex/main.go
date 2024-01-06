@@ -23,7 +23,10 @@ func main() {
 	pattern := regexp.MustCompile("A ([A-Za-z]*) for ([A-z]*) person")
 	desc := "Kayak. A boat for one person. A kayak for two person. "
 	subs := pattern.FindAllStringSubmatch(desc, -1)
-	for _, s := range subs {
-		fmt.Println(pattern.FindStringSubmatch(s))
+	for idx1, s := range subs {
+		for idx2, j := range s {
+			fmt.Printf("%v - %v - %v \n", idx1, idx2, j)
+		}
 	}
+
 }
