@@ -1,0 +1,13 @@
+<!-- <h1>Template Value: {{ . }}</h1>
+<h1>Name: {{ .Name }}</h1>
+<h1>Category: {{ .Category }}</h1>
+<h1>Price: {{ .Price | printf "$%.2f" }}</h1>
+<h1>Tax: {{ .AddTax | printf "$%.2f" }}</h1>
+<h1>Discount Price: {{ .ApplyDiscount 10 | printf "$%.2f" }}</h1> -->
+
+{{range . -}}
+<h1>
+    {{- "" -}} Name {{.Name}}, Category: {{.Category}}, Price,
+        {{- .Price | printf "$%.2f" -}} 
+</h1>
+{{ end }}
