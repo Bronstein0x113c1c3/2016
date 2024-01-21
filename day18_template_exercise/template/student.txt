@@ -1,0 +1,5 @@
+{{define "student" }}
+    Name: {{ .Name }}
+    ID: {{ .ID }}
+    GPA: {{ .GPA }}
+{{- end }}
