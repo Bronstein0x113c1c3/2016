@@ -10,7 +10,10 @@ var all_templ *template.Template
 
 func init() {
 	var err error
-	all_templ, err = template.ParseGlob("template/*.txt")
+	funcMap := template.FuncMap{
+		"checkGPA": checkGPA,
+	}
+	all_templ, err = template.New("student_templates").Funcs(funcMap).ParseGlob("template/*_with_board.txt")
 	if err != nil {
 		log.Fatalln("Error loading template")
 	}

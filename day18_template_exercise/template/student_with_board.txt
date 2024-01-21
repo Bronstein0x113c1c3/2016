@@ -1,3 +1,3 @@
 {{ define "student_with_board" }}
-|{{ .ID | printf "%-12v" }}|{{ .Name | printf "%-25v" }}|{{ .GPA | printf "%-31v"}}|
+|{{ .ID | printf "%-12v" }}|{{ .Name | printf "%-25v" }}|{{ .GPA | checkGPA | printf "%-31v"}}|
 {{- end -}}
