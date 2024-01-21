@@ -1,16 +1,11 @@
 package main
 
 import (
-	"log"
 	"os"
-	"text/template"
 )
 
 func main() {
-	all_temp, err := template.ParseGlob("template/*.txt")
-	if err != nil {
-		log.Fatal("Cannot load template")
-	}
-	all_temp.Lookup("main_with_board").Execute(os.Stdout, list_of_student)
-
+	// PrintStudent(list_of_student[0], os.Stdout)
+	// fmt.Println()
+	PrintStudentList(list_of_student, os.Stdout)
 }

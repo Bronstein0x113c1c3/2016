@@ -7,4 +7,4 @@ This is the info of students.....
 {{ template "student_with_board" . }}
 ------------------------------------------------------------------------
 {{- end }}
-{{ end }}
+{{ end }}   
