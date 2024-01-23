@@ -74,6 +74,9 @@ func main() {
 	http.Handle("/message", StringHandler{message: "Bonjour!"})
 	http.Handle("favicon.ico", http.NotFoundHandler())
 	http.Handle("/", http.RedirectHandler("/message", http.StatusTemporaryRedirect))
+	//for serving files.....
+	fsHandler := http.FileServer(http.Dir("./static")) //file handlers
+	http.Handle("/files/", http.StripPrefix("/files", fsHandler))
 
 	//these created the serve mux.....
 
