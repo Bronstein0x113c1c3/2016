@@ -2,6 +2,7 @@ package api
 
 import (
 	"day21/db"
+	"encoding/json"
 	"net/http"
 )
 
@@ -15,8 +16,16 @@ func InitHandlers(db db.IDoughnutDatabase) *Handlers {
 	}
 }
 
-func (h *Handlers) GetDoughnuts() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
+func (h *Handlers) GetDoughnuts(w http.ResponseWriter, r *http.Request) {
+	doughnuts, err := h.db.GetDoughnuts()
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{}"))
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusFound)
+	json.NewEncoder(w).Encode(doughnuts)
+	return
 }
