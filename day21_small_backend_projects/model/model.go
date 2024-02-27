@@ -11,3 +11,6 @@ func NewDoughnut(d_name, d_type string) Doughnut {
 		D_type: d_type,
 	}
 }
+func (d Doughnut) GetInfo() (string, string) {
+	return d.D_name, d.D_type
+}
