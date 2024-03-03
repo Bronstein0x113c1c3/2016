@@ -67,7 +67,7 @@ func handleConnection(conn net.Conn, signal chan struct{}, wg *sync.WaitGroup) {
 			wg.Done()
 			return
 		default:
-			log.Println("Hello")
+			log.Printf("Hello from %v \n", conn.RemoteAddr())
 			fmt.Fprintln(conn, "Hello")
 		}
 	}
@@ -243,4 +243,3 @@ func main() {
 	}
 
 }
-

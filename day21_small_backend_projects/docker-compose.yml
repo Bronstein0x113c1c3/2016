@@ -1,0 +1,15 @@
+version: "3"
+services:
+  go:
+    ports:
+      - 7000:7000
+    depends_on:
+      - sql
+    image: test_something:latest
+  sql:
+    image: mysql:8.0
+    ports:
+      - 3306:3306
+      - 33060:33060
+    environment:
+       MYSQL_ROOT_PASSWORD: "0x113c1c3"
