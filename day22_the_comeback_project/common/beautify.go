@@ -50,6 +50,8 @@ func BeautifyReflection(data reflect.Value, level int) {
 	// for i := 0; i < level; i++ {
 	// 	fmt.Print(" ")
 	// }
+	// type_ := data.Type()
+	// type_:=data.Func
 	for i := 0; i < data.NumField(); i++ {
 		kind := data.Field(i).Type().Kind()
 		exported := data.Type().Field(i).IsExported()
@@ -58,16 +60,28 @@ func BeautifyReflection(data reflect.Value, level int) {
 		}
 		switch kind {
 		case reflect.Slice:
+			for i := 0; i < level; i++ {
+				fmt.Print(" ")
+			}
 			fmt.Printf("%v: \n", data.Type().Field(i).Name)
 			for j := 0; j < data.Field(i).Len(); j++ {
+				fmt.Println("-")
 				elem := data.Field(i).Index(j)
 				BeautifyReflection(elem, level+1)
+				fmt.Println("-")
 			}
 			// SliceReflection(data.Field(i))
 			continue
 		case reflect.Pointer:
 			continue
 		case reflect.Struct:
+			if res, ok := data.Field(i).Interface().(fmt.Stringer); ok {
+				for i := 0; i < level; i++ {
+					fmt.Print(" ")
+				}
+				fmt.Printf("%v: %v \n", data.Type().Field(i).Name, res)
+				continue
+			}
 			fmt.Printf("%v: \n", data.Type().Field(i).Name)
 			BeautifyReflection(data.Field(i).Convert(data.Type().Field(i).Type), level+1)
 			continue
@@ -77,7 +91,7 @@ func BeautifyReflection(data reflect.Value, level int) {
 			for i := 0; i < level; i++ {
 				fmt.Print(" ")
 			}
-			fmt.Printf("%v: %v\n", data.Type().Field(i).Name, data.Field(i).String())
+			fmt.Printf("%v: %v\n", data.Type().Field(i).Name, data.Field(i).Interface())
 			continue
 		}
 	}

@@ -1,0 +1,4 @@
+{{template "board"}}
+{{- range . }}
+{{. | printf "\n"}}
+{{end}}

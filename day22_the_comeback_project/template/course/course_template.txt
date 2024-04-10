@@ -1,0 +1,2 @@
+{{define "board" -}}
+ID        |Name                                               |Code                                              |   
