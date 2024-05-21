@@ -1,0 +1,41 @@
+syntax = "proto3";
+option go_package = "/protobuf";
+
+message Signal{
+
+}
+message SongRequest {
+    oneof Request{
+        int32 id = 1;
+        Signal s=2;
+    }    
+}
+message SongInfo{
+    int32 id = 1;
+    string name = 2;
+    string artist_name = 3;
+    string album_name = 4;
+    int32 track_number = 5;
+    int32 published_year = 6;
+}
+message AllSong{
+    repeated SongInfo songs = 1;
+}
+
+message Chunk{
+    double left = 1;
+    double right = 2;
+}
+message Chunks{
+    repeated double Chunk = 1;
+}
+message SongData{
+    oneof Data{
+        SongInfo info =1;
+        Chunks chunks = 2;
+    }
+}
+service Player {
+    rpc GetAllSong (SongRequest) returns (AllSong);
+    rpc PlaySong (SongRequest) returns (stream SongData);
+}
