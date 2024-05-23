@@ -1,0 +1,21 @@
+syntax = "proto3";
+option go_package="./protobuf";
+
+message Client_MSG_sound {
+    repeated bytes sound = 1;
+}
+
+message Server_MSG_sound {
+    repeated bytes sound = 1;
+}
+message Client_MSG_text {
+    string message = 1;
+}
+
+message Server_MSG_text {
+    string message = 1;
+}
+service TheCall {
+    rpc Calling (stream Client_MSG_sound) returns (stream Server_MSG_sound);
+    rpc Messaging (stream Client_MSG_text) returns (stream Client_MSG_text);
+}
