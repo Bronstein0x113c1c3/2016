@@ -1,0 +1,77 @@
+binary.Read()
+	// // //reading these chunks....
+	// portaudio.Initialize()
+	// defer portaudio.Terminate()
+	// buf := make([]float32, 44100*2)
+	// reading_chunk, err := portaudio.OpenDefaultStream(0, 1, 44100, len(buf), &buf)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// reading_chunk.Start()
+	// defer reading_chunk.Stop()
+	// signal := make(chan struct{})
+	// go func() {
+	// 	for data := range input.GetChannel() {
+	// 		copy(buf, data)
+	// 		fmt.Println(data)
+	// 		log.Println("REading")
+	// 		reading_chunk.Write()
+	// 	}
+	// 	signal <- struct{}{}
+	// }()
+	// <-signal
+
+	// for data := range input.GetChannel() {
+	// 	fmt.Println(data)
+	// 	// data_chan <- data
+	// }
+	// close(data_chan)
+
+	// http.HandleFunc("/audio", func(w http.ResponseWriter, r *http.Request) {
+	// 	flusher, ok := w.(http.Flusher)
+	// 	if !ok {
+	// 		panic("expected http.ResponseWriter to be an http.Flusher")
+	// 	}
+
+	// 	w.Header().Set("Connection", "Keep-Alive")
+	// 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	// 	w.Header().Set("Transfer-Encoding", "chunked")
+	// 	w.Header().Set("Content-Type", "audio/wave")
+	// 	for data := range input.GetChannel() {
+	// 		x := data
+	// 		binary.Write(w, binary.BigEndian, &x)
+	// 		flusher.Flush() // Trigger "chunked" encoding and send a chunk...
+	// 		// return
+	// 	}
+	// })
+	// log.Println("handling started!!!!")
+	// http.ListenAndServe(":8080", nil)
+
+	// input.Start()
+
+	// io.Pipe()
+	// data_chan := make(chan []float32)
+
+	// var s string
+	// fmt.Print("Waiting...: ")
+	// fmt.Scanln(&s)
+	// fmt.Println("Waiting...: ")
+	// input.Stop()
+	// // input.Terminate()
+	// binary.Read
+	// for {
+	// 	buf := make([]int16, 8196)
+	// 	binary.Read(input.GetStream(), binary.LittleEndian)
+	// }
+	// portaudio.Initialize()
+	// defer portaudio.Terminate()
+	// // in := bytes.NewReader(input.GetStream().(*bytes.Buffer).Bytes())
+	// // in := new(bytes.Buffer).ReadFrom(input.GetStream())
+	// buf := make([]int16, 64)
+	// reading, err := portaudio.OpenDefaultStream(0, 2, 16000, len(buf), &buf)
+	// reading.Start()
+	// // reading.Stop()
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }

@@ -1,7 +1,6 @@
 package in
 
 import (
-	"bytes"
 	"encoding/binary"
 	"io"
 
@@ -10,13 +9,13 @@ import (
 
 type Input struct {
 	// in_stream_channel chan []int16
-	close_signal chan struct{}
-	// input_stream  io.Writer
-	output_stream io.Writer
+	sig chan string
+	// input_stream  io.Reader
+	output_stream io.Reader
 }
 
 // can i do it with io.Pipe??????? maybe
-func (i *Input) GetStream() io.Writer {
+func (i *Input) GetStream() io.Reader {
 	return i.output_stream
 }
 
@@ -47,43 +46,60 @@ func (i *Input) GetStream() io.Writer {
 // 	o.stream.Start()
 // }
 
+func (i *Input) Play() {
+	i.sig <- "play"
+}
 func (i *Input) Stop() {
 	// i.close_signal <- struct{}{}
-	close(i.close_signal)
+	// close(i.sig)
+	i.sig <- "stop"
+}
+func (i *Input) Pause() {
+	// i.pause_signal <- struct{}{}
+	i.sig <- "pause"
 }
 
-func New() (*Input, error) {
+func New(buffer_size int) (*Input, error) {
 	portaudio.Initialize()
-	buffer := make([]int16, 8196)
-	// data_chan := make(chan []int16)
-	var buffer_stream bytes.Buffer
-	signal := make(chan struct{})
-
-	stream, err := portaudio.OpenDefaultStream(1, 0, 16000, len(buffer), &buffer)
+	buffer := make([]int16, buffer_size)
+	out, in := io.Pipe()
+	signal := make(chan string)
+	stream, err := portaudio.OpenDefaultStream(2, 0, 16000, len(buffer), &buffer)
 
 	if err != nil {
 		return nil, err
 	}
-	stream.Start()
-	go func(signal chan struct{}) {
+	go func(signal chan string) {
 		for {
 			stream.Read()
 			// x := buffer
-			binary.Write(&buffer_stream, binary.LittleEndian, buffer)
+			binary.Write(in, binary.LittleEndian, buffer)
+
 			select {
-			case <-signal:
-				stream.Stop()
-				portaudio.Terminate()
-				return
+			case x := <-signal:
+				if x == "pause" {
+					stream.Abort()
+					clear(buffer)
+					continue
+				}
+				if x == "stop" {
+					stream.Close()
+					portaudio.Terminate()
+					return
+				}
+				if x == "play" {
+					stream.Start()
+					continue
+				}
 			default:
 
 			}
 		}
 	}(signal)
 	return &Input{
-		close_signal: signal,
+		sig: signal,
 		// input_stream:  in,
-		output_stream: &buffer_stream,
+		output_stream: out,
 	}, nil
 	// go func(data_chan chan []int16) {
 	// 	data_chan <- in

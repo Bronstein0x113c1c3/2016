@@ -1,57 +1,62 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"log"
 	in "server/input"
-
-	"github.com/gordonklaus/portaudio"
+	"server/output"
 )
 
 func main() {
-	input, err := in.New()
+	input, err := in.New(8192)
 	if err != nil {
 		log.Fatal(err)
 	}
-	// input.Start()
-
-	// io.Pipe()
-	// data_chan := make(chan []float32)
-
-	var s string
-	fmt.Print("Waiting...: ")
-	fmt.Scanln(&s)
-	fmt.Println("Waiting...: ")
-	input.Stop()
-	// // input.Terminate()
-	// binary.Read
-	// for {
-	// 	buf := make([]int16, 8196)
-	// 	binary.Read(input.GetStream(), binary.LittleEndian)
-	// }
-	portaudio.Initialize()
-	defer portaudio.Terminate()
-	in := bytes.NewReader(input.GetStream().(*bytes.Buffer).Bytes())
-	buf := make([]int16, 8196)
-	reading, err := portaudio.OpenDefaultStream(0, 1, 16000, len(buf), &buf)
-	reading.Start()
+	output, err := output.New(8192, input.GetStream())
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
-	signal := make(chan struct{})
+	stop := make(chan struct{})
 	go func() {
 		for {
-			err := binary.Read(in, binary.LittleEndian, &buf)
-			reading.Write()
-			if err != nil {
-				signal <- struct{}{}
+			var s string
+			fmt.Print("Press a command (play, pause, stop): ")
+			fmt.Scanln(&s)
+			switch s {
+			case "pause":
+				fmt.Println("Paused")
+				input.Pause()
+			case "play":
+				fmt.Println("Continue")
+				input.Play()
+				output.Play()
+			case "stop":
+				fmt.Println("Prepare to stop all....")
+				input.Stop()
+				output.Stop()
+				stop <- struct{}{}
 				return
+			default:
+				fmt.Println("Wrong command!!!")
+				continue
+
 			}
 		}
 	}()
-	<-signal
+	<-stop
+	// signal := make(chan struct{})
+	// go func() {
+	// 	for {
+	// 		err := binary.Read(input.GetStream(), binary.LittleEndian, &buf)
+	// 		reading.Write()
+	// 		if err != nil {
+	// 			signal <- struct{}{}
+	// 			return
+	// 		}
+	// 	}
+	// }()
+
+	// <-signal
 }
 
 //caller and callee!!!
