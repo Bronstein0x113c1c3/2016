@@ -2,11 +2,11 @@ syntax = "proto3";
 option go_package="./protobuf";
 
 message Client_MSG_sound {
-    repeated bytes sound = 1;
+    bytes sound = 1;
 }
 
 message Server_MSG_sound {
-    repeated bytes sound = 1;
+    bytes sound = 1;
 }
 message Client_MSG_text {
     string message = 1;
