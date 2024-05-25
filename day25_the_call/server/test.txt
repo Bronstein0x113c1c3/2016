@@ -1,0 +1,109 @@
+func New() (*Input, error) {
+	portaudio.Initialize()
+	buffer := make([]float32, 44100*2)
+	stream, err := portaudio.OpenDefaultStream(1, 0, 44100, len(buffer), func(in []float32) {
+		copy(buffer, in)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err := stream.Start(); err != nil {
+		stream.Close()
+		return nil, err
+	}
+	sound_chan := make(chan []float32)
+	close_signal := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-close_signal:
+				log.Println("Audio chan closed")
+				return
+			case sound_chan <- buffer:
+			}
+		}
+	}()
+	// return
+
+	return &Input{
+		stream:            stream,
+		in_stream_channel: sound_chan,
+		close_signal:      close_signal,
+	}, nil
+}
+
+
+
+
+
+// if err == io.EOF {
+// 	log.Println("Reading done!!!!")
+
+// 	return nil
+// }
+// if err != nil {
+// 	return status.Error(status.Code(err), status.Code(err).String())
+// }
+// err = caller.Send(&pb.Server_MSGSound{
+// 	Sound: data,
+// })
+// if err != nil {
+// 	return status.Error(status.Code(err), status.Code(err).String())
+// }
+
+// ctx, cancel := context.WithCancel(s.Done)
+// defer cancel()
+// index := s.add(caller)
+// defer s.delete_chan(index)
+// for {
+// 	select {
+// 	case <-ctx.Done():
+// 		return nil
+// 	default:
+// 	}
+// }
+
+// for {
+// defer s.delete_chan(index)
+// <-ctx.Done()
+// return nil
+// }
+// s.delete_chan(index)
+// return
+
+// // reader := bufio.NewReader(s.input.GetStream())
+// index := s.add()
+// defer s.delete_chan(index)
+// for {
+
+// 	data, ok := <-s.list_of_client[index]
+// 	// n, err := reader.Read(data)
+
+// 	if !ok {
+// 		log.Println("Reading done!!!!")
+
+// 		return nil
+// 	}
+
+// 	err := caller.Send(&pb.Server_MSGSound{
+// 		Sound: data,
+// 	})
+// 	if err != nil {
+// 		return status.Error(status.Code(err), status.Code(err).String())
+// 	}
+
+// 	// if err == io.EOF {
+// 	// 	log.Println("Reading done!!!!")
+
+// 	// 	return nil
+// 	// }
+// 	// if err != nil {
+// 	// 	return status.Error(status.Code(err), status.Code(err).String())
+// 	// }
+// 	// err = caller.Send(&pb.Server_MSGSound{
+// 	// 	Sound: data,
+// 	// })
+// 	// if err != nil {
+// 	// 	return status.Error(status.Code(err), status.Code(err).String())
+// 	// }

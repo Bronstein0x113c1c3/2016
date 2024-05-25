@@ -75,3 +75,49 @@ binary.Read()
 	// if err != nil {
 	// 	log.Fatalln(err)
 	// }
+
+
+
+	go func() {
+	// 	for {
+	// 		var s string
+	// 		fmt.Print("Press a command (play, pause, stop): ")
+	// 		fmt.Scanln(&s)
+	// 		select {
+	// 		case <-ctx.Done():
+	// 			log.Println("Signal after forcing initiating")
+	// 			input.Stop()
+	// 			grpc_helper.GracefulStop()
+	// 			// service.Close()
+	// 			return
+	// 		default:
+	// 			switch s {
+	// 			case "pause":
+	// 				fmt.Println("Paused")
+	// 				input.Pause()
+	// 				continue
+	// 			case "play":
+	// 				fmt.Println("Continue")
+	// 				fmt.Println("Continue")
+	// 				input.Play()
+
+	// 				continue
+
+	// 				// output.Play()
+	// 			case "stop":
+	// 				fmt.Println("Prepare to stop all....")
+	// 				input.Stop()
+	// 				grpc_helper.GracefulStop()
+	// 				// output.Stop()
+	// 				// stop <- struct{}{}
+
+	// 				return
+	// 			default:
+	// 				fmt.Println("Wrong command!!!")
+	// 				continue
+
+	// 			}
+	// 		}
+	// 	}
+	// }()
+	// grpc_helper.Serve(net)
