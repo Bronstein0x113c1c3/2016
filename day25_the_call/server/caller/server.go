@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"log"
 	pb "server/protobuf"
-	"slices"
 	"sync"
+	"sync/atomic"
 )
+
+// var ListOfClient sync.Map
 
 type Caller struct {
 	host string
 	port int
 	// input *in.Input
 	pb.UnimplementedTheCallServer
-	ListOfClient []chan []byte
+	ListOfClient map[uint32]chan []byte
+	// ListOfClient *sync.Map
 	mutex        *sync.RWMutex
 	ChangeSignal chan struct{}
+	counter      uint32
 	// receiver     chan []byte
 	// Done           chan struct{}
 }
@@ -25,83 +29,75 @@ func New(host string, port int /* input *in.Input*/) *Caller {
 		host: host,
 		port: port,
 		// input:          input,
-		ListOfClient: make([]chan []byte, 0),
+		ListOfClient: make(map[uint32]chan []byte),
 		mutex:        &sync.RWMutex{},
 		ChangeSignal: make(chan struct{}),
 		// Done:           make(chan struct{}),
+		counter: 0,
 	}
 }
 
-//	func (s *Caller) Close() {
-//		for _, j := range s.ListOfClient {
-//			close(j)
-//		}
-//		close(s.DeleteSignal)
-//	}
-func (s *Caller) add() int {
+// func (s *Caller) LoadAChan(i uint) chan []byte {
+// 	c, _ := s.ListOfClient.Load(i)
+// 	channel := c.(chan []byte)
+// 	return channel
+// }
+
+func (s *Caller) GetAmountOfChannel() uint32 {
+	return s.counter
+}
+func (s *Caller) add() (uint32, chan []byte) {
 	// s.mutex.Lock()
 	s.ChangeSignal <- struct{}{}
-	s.ListOfClient = append(s.ListOfClient, make(chan []byte))
-	i := len(s.ListOfClient) - 1
+	// s.ListOfClient = append(s.ListOfClient, make(chan []byte))
+	index := atomic.AddUint32(&s.counter, 1)
+	channel := make(chan []byte)
+	s.mutex.Lock()
+	s.ListOfClient[index] = channel
+	s.mutex.Unlock()
+	// i := len(s.ListOfClient) - 1
 	// s.mutex.Unlock()
-	log.Printf("Channel %v is created!!!", i)
-	return i
+	log.Printf("Channel %v is created!!!", index)
+	return index, channel
 }
-func (s *Caller) delete_chan(i int, closed bool) {
-
+func (s *Caller) delete_chan(i uint32, closed bool) {
 	// s.mutex.Lock()
 	if !closed {
 		s.ChangeSignal <- struct{}{}
-		close(s.ListOfClient[i])
+		s.mutex.RLock()
+		channel, _ := s.ListOfClient[i]
+		s.mutex.RUnlock()
+
+		close(channel)
 	}
-	s.ListOfClient = slices.Delete(s.ListOfClient, i, i+1)
+	s.mutex.Lock()
+	delete(s.ListOfClient, i)
+	s.mutex.Unlock()
+	// s.ListOfClient = slices.Delete(s.ListOfClient, i, i+1)
 	// s.mutex.Unlock()
 	// s.Done <- struct{}{}
-	log.Printf("Channel %v is deleted!!!", i)
+	// x := s.counter
+	_ = atomic.AddUint32(&s.counter, ^uint32(0))
+	log.Printf("Channel %v is deleted from the reservation!!!", i)
 }
-
-// func (s *Caller) UpdateOrClose(receiver chan []byte, signal chan struct{}) {
-// 	// for _, client := range s.ListOfClient {
-// 	// 	client <- data
-// 	// }
-// 	for data := range receiver {
-// 		select {
-// 		case <-s.DeleteSignal:
-// 			log.Println("Change received....")
-// 			return
-// 		default:
-// 			for _, client := range s.ListOfClient {
-// 				client <- data
-// 			}
-// 		}
-// 	}
-// 	log.Println("Starting to close channel")
-// 	for _, client := range s.ListOfClient {
-// 		close(client)
-// 	}
-// 	log.Println("Closed these channel....")
-// 	close(s.DeleteSignal)
-// 	log.Println("No more addition or deletion from the channel, closing all....")
-// 	return
-
-// }
 
 func (s *Caller) String() string {
 	return fmt.Sprintf("%v:%v", s.host, s.port)
 }
 func (s *Caller) Calling(caller pb.TheCall_CallingServer) error {
 	// reader := bufio.NewReader(s.input.GetStream())
-	index := s.add()
+	index, channel := s.add()
 	// defer log.Printf("%v is completely closed \n", index)
-
+	// channel := s.LoadAChan(index)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		// defer s.delete_chan(index, true)
+		defer s.delete_chan(index, true)
 		defer log.Printf("%v is closed \n", index)
 		defer wg.Done()
+
 		for {
-			data, ok := <-s.ListOfClient[index]
+			data, ok := <-channel
 			if !ok {
 				log.Printf("%v is closed \n", index)
 				return

@@ -91,17 +91,6 @@ func main() {
 
 	}()
 	go func(data_chan chan []byte) {
-		// for data := range data_chan {
-		// 	select {
-		// 	case <-service.ChangeSignal:
-		// 		log.Println("Someone is leaving")
-		// 		continue
-		// 	default:
-		// 		for _, client := range service.ListOfClient {
-		// 			client <- data
-		// 		}
-		// 	}
-		// }
 		defer log.Println("Don't send anymore....")
 		for {
 			data, ok := <-data_chan
@@ -112,6 +101,7 @@ func main() {
 					close(client)
 				}
 				// clear()
+
 				return
 			}
 			select {
@@ -122,6 +112,13 @@ func main() {
 				for _, client := range service.ListOfClient {
 					client <- data
 				}
+				// for i := range service.GetAmountOfChannel() {
+				// 	if c, ok := caller.ListOfClient.Load(i); ok {
+				// 		channel := c.(*chan []byte)
+				// 		*channel <- data
+
+				// 	}
+				// }
 			}
 		}
 	}(data_chan)

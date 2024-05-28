@@ -12,3 +12,29 @@
 		// if err != nil {
 		// 	return status.Error(status.Code(err), status.Code(err).String())
 		// }
+
+		// func (s *Caller) UpdateOrClose(receiver chan []byte, signal chan struct{}) {
+// 	// for _, client := range s.ListOfClient {
+// 	// 	client <- data
+// 	// }
+// 	for data := range receiver {
+// 		select {
+// 		case <-s.DeleteSignal:
+// 			log.Println("Change received....")
+// 			return
+// 		default:
+// 			for _, client := range s.ListOfClient {
+// 				client <- data
+// 			}
+// 		}
+// 	}
+// 	log.Println("Starting to close channel")
+// 	for _, client := range s.ListOfClient {
+// 		close(client)
+// 	}
+// 	log.Println("Closed these channel....")
+// 	close(s.DeleteSignal)
+// 	log.Println("No more addition or deletion from the channel, closing all....")
+// 	return
+
+// }
