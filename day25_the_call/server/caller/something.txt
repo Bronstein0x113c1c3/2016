@@ -1,0 +1,14 @@
+// if err == io.EOF {
+		// 	log.Println("Reading done!!!!")
+
+		// 	return nil
+		// }
+		// if err != nil {
+		// 	return status.Error(status.Code(err), status.Code(err).String())
+		// }
+		// err = caller.Send(&pb.Server_MSGSound{
+		// 	Sound: data,
+		// })
+		// if err != nil {
+		// 	return status.Error(status.Code(err), status.Code(err).String())
+		// }

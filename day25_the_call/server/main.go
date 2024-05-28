@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -9,11 +10,7 @@ import (
 	"server/caller"
 	in "server/input"
 	pb "server/protobuf"
-	"sync"
 	"syscall"
-
-	"net/http"
-	_ "net/http/pprof"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -21,111 +18,117 @@ import (
 
 func main() {
 
-	// ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	// defer stop()
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	// io.MultiReader()
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	input, err := in.New(1024)
-	//if you don't like it, just
-	go input.Play()
-	// go input.Pause()
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println("The microphone input is initiated")
 	service := caller.New("127.0.0.1", 8080)
-	// defer service.Close()
 	grpc_helper := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+
 	pb.RegisterTheCallServer(grpc_helper, service)
 	net, err := net.Listen("tcp", fmt.Sprintf("%v", service))
 	log.Println("Service, server is implemented!")
+	// defer grpc_helper.GracefulStop()
+
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
+	go input.Play()
+	data_chan := make(chan []byte, 50)
+	// change := make(chan struct{})
 	go func() {
 		for {
 			var s string
-			fmt.Print("Press a command (play, pause, stop): ")
-			fmt.Scanln(&s)
+			log.Println("Press a command (play, pause, stop, force shutdown - ctrl + c)...")
+			// fmt.Scanln(&s)
 			select {
-			case <-sigs:
-				log.Println("Signal after forcing initiating")
-				go input.Stop()
-				go grpc_helper.GracefulStop()
+			case <-sig:
+				log.Println("Forcing shutting down signal received!!!")
+				log.Println("Stopping input!!!")
+				input.Stop()
+				log.Println("Stopped input!!!")
+				grpc_helper.GracefulStop()
+				log.Println("Stopped gRPC!!!")
 
-				go service.Close()
-				wg.Done()
 				return
 			default:
+				fmt.Scanln(&s)
 				switch s {
-				case "pause":
-					fmt.Println("Paused")
-					// clear()
-					input.Pause()
-					continue
 				case "play":
-					fmt.Println("Continue")
 					input.Play()
 					continue
-
-					// output.Play()
-				case "stop":
-					fmt.Println("Prepare to stop all....")
-					go input.Stop()
-					fmt.Println("Stopped input....")
-					grpc_helper.GracefulStop()
-					fmt.Println("Stopped RPCs....")
-					wg.Done()
-
-					// output.Stop()
-					// stop <- struct{}{}
-
-					return
-				default:
-					fmt.Println("Wrong command!!!")
+				case "pause":
+					input.Pause()
 					continue
-
+				case "stop":
+					input.Stop()
+					input.GetStream().(*io.PipeReader).Close()
+					grpc_helper.GracefulStop()
+					log.Println("Stopped gRPC!!!")
+					return
 				}
 			}
 		}
 	}()
-	wg.Add(1)
+
 	go func() {
 		stream := input.GetStream()
 		for {
 			data := make([]byte, 1024)
 			n, err := stream.Read(data)
 			if err != nil {
-				log.Println(err)
-				wg.Done()
+				log.Println("EOF signal received!!! Stream is stopped!!! Start to closing data channel")
+				close(data_chan)
+				return
+			}
+			// log.Println("Exchanging....")
+			data_chan <- data[0:n]
+		}
+
+	}()
+	go func(data_chan chan []byte) {
+		// for data := range data_chan {
+		// 	select {
+		// 	case <-service.ChangeSignal:
+		// 		log.Println("Someone is leaving")
+		// 		continue
+		// 	default:
+		// 		for _, client := range service.ListOfClient {
+		// 			client <- data
+		// 		}
+		// 	}
+		// }
+		defer log.Println("Don't send anymore....")
+		for {
+			data, ok := <-data_chan
+			if !ok {
+				log.Println("Stream is closed....")
+				for i, client := range service.ListOfClient {
+					log.Printf("%v is starting to be closed \n", i)
+					close(client)
+				}
+				// clear()
 				return
 			}
 			select {
-			case x := <-service.DeleteSignal:
-				if x == "Shutting down all!!!" {
-					wg.Done()
-					return
-				} else {
-					log.Println("Waiting for ....")
-					<-service.WaitSignal
-					continue
-				}
+			case <-service.ChangeSignal:
+				log.Println("Something changed....")
+				continue
 			default:
-				service.Update(data[0:n])
+				for _, client := range service.ListOfClient {
+					client <- data
+				}
 			}
 		}
-	}()
-	go grpc_helper.Serve(net)
-	go func() {
-		fmt.Println(http.ListenAndServe("127.0.0.1:6060", nil))
-	}()
-	wg.Wait()
-	return
-	//
+	}(data_chan)
+
+	grpc_helper.Serve(net)
+	log.Println("Everything ended!!!")
 
 }
+
+// service.UpdateOrClose(data_chan, service.DeleteSignal)
