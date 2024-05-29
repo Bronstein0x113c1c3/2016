@@ -101,13 +101,21 @@ func main() {
 					close(client)
 				}
 				// clear()
-
 				return
 			}
 			select {
-			case <-service.ChangeSignal:
+			case x := <-service.ChangeSignal:
 				log.Println("Something changed....")
-				continue
+				if x == 0 {
+					continue
+				} else {
+					close(service.ListOfClient[x])
+					// service.Mutex.Lock()
+					delete(service.ListOfClient, x)
+					// service.Mutex.Lock()
+					log.Printf("There are %v active connections \n", service.GetAmountOfChannel())
+					continue
+				}
 			default:
 				for _, client := range service.ListOfClient {
 					client <- data
