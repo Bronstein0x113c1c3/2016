@@ -113,7 +113,7 @@ func main() {
 					// service.Mutex.Lock()
 					delete(service.ListOfClient, x)
 					// service.Mutex.Lock()
-					log.Printf("There are %v active connections \n", service.GetAmountOfChannel())
+					// log.Printf("There are %v active connections \n", service.GetAmountOfChannel())
 					continue
 				}
 			default:

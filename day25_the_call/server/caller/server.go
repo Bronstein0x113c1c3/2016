@@ -6,6 +6,9 @@ import (
 	pb "server/protobuf"
 	"sync"
 	"sync/atomic"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // var ListOfClient sync.Map
@@ -20,6 +23,7 @@ type Caller struct {
 	Mutex        *sync.RWMutex
 	ChangeSignal chan uint32
 	counter      uint32
+	// set          uint32
 	// receiver     chan []byte
 	// Done           chan struct{}
 }
@@ -50,15 +54,28 @@ func (s *Caller) add() (uint32, chan []byte) {
 	// s.Mutex.Lock()
 	s.ChangeSignal <- 0
 	// s.ListOfClient = append(s.ListOfClient, make(chan []byte))
-	index := atomic.AddUint32(&s.counter, 1)
+	// index := atomic.AddUint32(&s.counter, 1)
+	var index uint32
 	channel := make(chan []byte)
 	s.Mutex.Lock()
-	s.ListOfClient[index] = channel
+	for i := 1; i <= (1<<32)-1; i++ {
+		if _, found := s.ListOfClient[uint32(i)]; !found {
+			index = uint32(i)
+			s.ListOfClient[index] = channel
+			break
+		}
+	}
+	// s.ListOfClient[index] = channel
 	s.Mutex.Unlock()
 	// i := len(s.ListOfClient) - 1
 	// s.Mutex.Unlock()
-	log.Printf("Channel %v is created!!!", index)
-	return index, channel
+	if index != 0 {
+		_ = atomic.AddUint32(&s.counter, 1)
+		log.Printf("Channel %v is created!!!", index)
+		return index, channel
+	} else {
+		return 0, nil
+	}
 }
 func (s *Caller) delete_chan(i uint32, closed bool) {
 	// s.Mutex.Lock()
@@ -95,6 +112,9 @@ func (s *Caller) String() string {
 func (s *Caller) Calling(caller pb.TheCall_CallingServer) error {
 	// reader := bufio.NewReader(s.input.GetStream())
 	index, channel := s.add()
+	if index == 0 {
+		return status.Error(codes.Canceled, "The server is full of connections")
+	}
 	defer log.Printf("%v is completely closed \n", index)
 	// defer log.Printf("%v is completely closed \n", index)
 	// channel := s.LoadAChan(index)
