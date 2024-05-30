@@ -99,23 +99,31 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
-	"github.com/bobertlo/go-mpg123/mpg123"
+	"github.com/kvark128/minimp3"
+	// "github.com/sdobz/go-mpg123"
+	// "github.com/sdobz/go-mpg123"
 )
 
 func main() {
 	http.HandleFunc("/mp3", func(w http.ResponseWriter, r *http.Request) {
-		decoder, err := mpg123.NewDecoder("")
-		chk(err)
-		chk(decoder.Open("rightforyou.mp3"))
-		rate, channel, encoding := decoder.GetFormat()
-		log.Printf("info of the mp3 file: rate: %v, channel: %v, encoding: %v \n", rate, channel, encoding)
+		// decoder, err := mpg123.NewDecoder("")
+		// chk(err)
+		// chk(decoder.Open("rightforyou.mp3"))
+		file, err := os.Open("rightforyou.mp3")
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+
+		mp3dec := minimp3.NewDecoder(file)
 		//
-		decoder.FormatNone()
-		decoder.Format(rate, channel, mpg123.ENC_16)
+		// decoder.Format()
+		// decoder.Format(rate, channel, mpg123.ENC_16)
 		buf := make([]byte, 256)
 		for {
-			if _, err := decoder.Read(buf); err != nil {
+			if _, err := mp3dec.Read(buf); err != nil {
 				break
 			}
 			w.Write(buf)

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        ".fantomasignore": "ignore",
+        "mpg123.h": "c"
+    }
+}
