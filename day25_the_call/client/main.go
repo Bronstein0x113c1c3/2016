@@ -5,20 +5,34 @@ import (
 	"client/output"
 	"client/protobuf"
 	"context"
+	"crypto/tls"
 	"io"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	grpcquic "github.com/coremedic/grpc-quic"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
-	net, err := grpc.Dial("127.0.0.1:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Create TLS config
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"caller"},
+	}
+	creds := grpcquic.NewCredentials(tlsConfig)
+
+	// Connect to gRPC Service Server
+	dialer := grpcquic.NewQuicDialer(tlsConfig)
+	grpcOpts := []grpc.DialOption{
+		grpc.WithContextDialer(dialer),
+		grpc.WithTransportCredentials(creds),
+	}
+	net, err := grpc.Dial("localhost:8080", grpcOpts...)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 	ctx := context.Background()
 	client, _ := protobuf.NewTheCallClient(net).Calling(ctx)

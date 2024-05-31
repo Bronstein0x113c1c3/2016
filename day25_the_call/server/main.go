@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"server/caller"
 	in "server/input"
 	pb "server/protobuf"
+	"server/utility"
 	"syscall"
 
 	"google.golang.org/grpc"
@@ -30,8 +30,23 @@ func main() {
 	grpc_helper := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 
 	pb.RegisterTheCallServer(grpc_helper, service)
-	net, err := net.Listen("tcp", fmt.Sprintf("%v", service))
-	log.Println("Service, server is implemented!")
+
+	//time for http3 to shine!!!
+
+	// // net, err := net.Listen("tcp", fmt.Sprintf("%v", service))
+	tlsconfig, err := utility.GenerateTLSConfig("caller")
+	if err != nil {
+		log.Fatalln("Failed creating tls config for server")
+	}
+
+	// quic_tunnel, err := quic.ListenAddr(fmt.Sprint(service), tlsconfig, nil)
+	// if err != nil {
+	// 	log.Fatalln("Failed creating quic/http3 tunnel")
+	// }
+	// //parsing quic listener to universal net listener!!
+	// net := grpcquic.Listen(*quic_tunnel)
+	net, err := utility.NewHTTP3Lis(fmt.Sprint(service), tlsconfig)
+	log.Println("Service, server is implemented, with HTTP/3!")
 	// defer grpc_helper.GracefulStop()
 
 	if err != nil {
