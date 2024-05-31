@@ -1,6 +1,7 @@
 package main
 
 import (
+	"client/input"
 	"client/output"
 	"client/protobuf"
 	"context"
@@ -10,7 +11,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/kvark128/minimp3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -26,8 +26,8 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	out, in := io.Pipe()
 	output, _ := output.New(1024, out)
-	// ctx := context.Background()
-	// ctx.
+	input, _ := input.New(1024)
+
 	go func() {
 		for {
 			data, err := client.Recv()
@@ -35,43 +35,34 @@ func main() {
 			if err != nil {
 				in.Close()
 				output.Stop()
+				input.Stop()
 				return
-				// sig <- struct{}{}
+
 			}
 		}
 	}()
 	go func() {
-		file, _ := os.Open("rightforyou.mp3")
-		decoder := minimp3.NewDecoder(file)
+		stream := input.GetStream()
 		for {
-			buff := make([]byte, 1024)
-			n, err := decoder.Read(buff)
+			data := make([]byte, 1024)
+			n, err := stream.Read(data)
 			if err != nil {
+				log.Println("EOF signal received!!! Stream is stopped!!! Start to closing data channel")
+
 				return
 			}
-			// .Write(buff[0:n])
-			client.Send(&protobuf.Client_MSGSound{
-				Sound: buff[0:n],
-			})
+			client.Send(&protobuf.Client_MSGSound{Sound: data[0:n]})
+
 		}
-		// portaudio.Initialize()
+
 	}()
 	go func() {
 		output.Play()
+		input.Play()
 	}()
-	// go func() {
-	// 	for {
-	// 		select {
-	// 		case <-sigs:
-	// 			client.Send()
-	// 		}
-	// 	}
-	// }()
+
 	<-sigs
 	client.CloseSend()
-	// client.Send(&protobuf.Client_MSGSound{
-	// 	Sound: []byte("Goodbye!!"),
-	// })
 
 	log.Println("CloseSend signal is sent!!!")
 	in.Close()

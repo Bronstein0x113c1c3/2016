@@ -12,21 +12,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// var ListOfClient sync.Map
-
 type Caller struct {
 	host string
 	port int
-	// input *in.Input
 	pb.UnimplementedTheCallServer
 	ListOfClient map[uint32]chan []byte
-	// ListOfClient *sync.Map
 	Mutex        *sync.RWMutex
 	ChangeSignal chan uint32
 	counter      uint32
-	// set          uint32
-	// receiver     chan []byte
-	// Done           chan struct{}
 }
 
 func New(host string, port int /* input *in.Input*/) *Caller {
@@ -41,12 +34,6 @@ func New(host string, port int /* input *in.Input*/) *Caller {
 		counter: 0,
 	}
 }
-
-// func (s *Caller) LoadAChan(i uint) chan []byte {
-// 	c, _ := s.ListOfClient.Load(i)
-// 	channel := c.(chan []byte)
-// 	return channel
-// }
 
 func (s *Caller) GetAmountOfChannel() uint32 {
 	return s.counter
@@ -83,7 +70,7 @@ func (s *Caller) delete_chan(i uint32, closed bool) {
 	// defer log.Printf("There is %v\n", s.counter)
 	if !closed {
 		s.ChangeSignal <- i
-		// s.Mutex.RLock()
+
 		// channel := s.ListOfClient[i]
 		// s.Mutex.RUnlock()
 		// s.Mutex.Lock()
@@ -97,10 +84,7 @@ func (s *Caller) delete_chan(i uint32, closed bool) {
 	s.Mutex.Lock()
 	delete(s.ListOfClient, i)
 	s.Mutex.Unlock()
-	// s.ListOfClient = slices.Delete(s.ListOfClient, i, i+1)
-	// s.Mutex.Unlock()
-	// s.Done <- struct{}{}
-	// x := s.counter
+
 	_ = atomic.AddUint32(&s.counter, ^uint32(0))
 	log.Printf("Channel %v is deleted from the reservation!!!", i)
 	return
@@ -123,49 +107,14 @@ func (s *Caller) Calling(caller pb.TheCall_CallingServer) error {
 
 	portaudio.Initialize()
 	defer portaudio.Terminate()
-	// buffer_4_recv := make([]int16, 1024)
-	// client_sound, _ := portaudio.OpenDefaultStream(0, 2, 44100, len(buffer_4_recv), &buffer_4_recv)
 
 	defer log.Printf("%v is completely closed \n", index)
-	// defer log.Printf("%v is completely closed \n", index)
-	// channel := s.LoadAChan(index)
-	// wg := &sync.WaitGroup{}
-	// wg.Add(1)
+
 	signal_1 := make(chan struct{})
 	signal_2 := make(chan struct{})
-	// defer close(signal)
 
-	// go func() {
-	// 	defer func(signal chan struct{}) {
-	// 		close(signal)
-	// 	}(signal_1)
-	// 	// defer s.delete_chan(index, true)
-	// 	// defer log.Printf("%v is closed \n", index)
-	// 	// defer wg.Done()
-
-	// 	for {
-	// 		data, ok := <-channel
-	// 		if !ok {
-	// 			log.Printf("%v is forcing closed \n", index)
-	// 			return
-	// 		}
-	// 		caller.Send(&pb.Server_MSGSound{Sound: data})
-	// 	}
-	// }()
 	go send_to_client(index, signal_1, channel, caller)
-	// go func() {
-	// 	defer close(signal_2)
-	// 	for {
-	// 		// data, err := caller.Recv()
-	// 		if err != nil {
-	// 			return
-	// 		}
-	// 		// x := data.Sound
-	// 		// if string(x) == "Goodbye!!" {
-	// 		// 	return
-	// 		// }
-	// 	}
-	// }()
+
 	go hear_from_client(caller, signal_2)
 	for {
 		select {
@@ -180,7 +129,5 @@ func (s *Caller) Calling(caller pb.TheCall_CallingServer) error {
 		}
 
 	}
-
-	// wg.Wait()
 
 }

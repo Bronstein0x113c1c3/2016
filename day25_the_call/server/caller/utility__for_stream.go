@@ -27,7 +27,7 @@ func hear_from_client(caller pb.TheCall_CallingServer, signal chan struct{}) {
 	// internal_sig := make(chan struct{})
 
 	out, in := io.Pipe()
-	output, _ := output.New(1024, out, 44100)
+	output, _ := output.New(1024, out, 16000)
 	// ctx := context.Background()
 	// ctx.
 	go func() {
