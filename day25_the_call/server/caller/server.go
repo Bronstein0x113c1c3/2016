@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/gordonklaus/portaudio"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -109,12 +110,22 @@ func (s *Caller) delete_chan(i uint32, closed bool) {
 func (s *Caller) String() string {
 	return fmt.Sprintf("%v:%v", s.host, s.port)
 }
+
+// func processing_sound()
 func (s *Caller) Calling(caller pb.TheCall_CallingServer) error {
 	// reader := bufio.NewReader(s.input.GetStream())
+
 	index, channel := s.add()
+
 	if index == 0 {
 		return status.Error(codes.Canceled, "The server is full of connections")
 	}
+
+	portaudio.Initialize()
+	defer portaudio.Terminate()
+	// buffer_4_recv := make([]int16, 1024)
+	// client_sound, _ := portaudio.OpenDefaultStream(0, 2, 44100, len(buffer_4_recv), &buffer_4_recv)
+
 	defer log.Printf("%v is completely closed \n", index)
 	// defer log.Printf("%v is completely closed \n", index)
 	// channel := s.LoadAChan(index)
@@ -123,37 +134,39 @@ func (s *Caller) Calling(caller pb.TheCall_CallingServer) error {
 	signal_1 := make(chan struct{})
 	signal_2 := make(chan struct{})
 	// defer close(signal)
-	go func() {
-		defer func(signal chan struct{}) {
-			close(signal)
-		}(signal_1)
-		// defer s.delete_chan(index, true)
-		// defer log.Printf("%v is closed \n", index)
-		// defer wg.Done()
 
-		for {
-			data, ok := <-channel
-			if !ok {
-				log.Printf("%v is forcing closed \n", index)
-				return
-			}
-			caller.Send(&pb.Server_MSGSound{Sound: data})
-		}
-	}()
-	go func() {
-		defer close(signal_2)
-		for {
-			data, err := caller.Recv()
-			if err != nil {
-				return
-			}
-			x := data.Sound
-			if string(x) == "Goodbye!!" {
-				return
-			}
-		}
+	// go func() {
+	// 	defer func(signal chan struct{}) {
+	// 		close(signal)
+	// 	}(signal_1)
+	// 	// defer s.delete_chan(index, true)
+	// 	// defer log.Printf("%v is closed \n", index)
+	// 	// defer wg.Done()
 
-	}()
+	// 	for {
+	// 		data, ok := <-channel
+	// 		if !ok {
+	// 			log.Printf("%v is forcing closed \n", index)
+	// 			return
+	// 		}
+	// 		caller.Send(&pb.Server_MSGSound{Sound: data})
+	// 	}
+	// }()
+	go send_to_client(index, signal_1, channel, caller)
+	// go func() {
+	// 	defer close(signal_2)
+	// 	for {
+	// 		// data, err := caller.Recv()
+	// 		if err != nil {
+	// 			return
+	// 		}
+	// 		// x := data.Sound
+	// 		// if string(x) == "Goodbye!!" {
+	// 		// 	return
+	// 		// }
+	// 	}
+	// }()
+	go hear_from_client(caller, signal_2)
 	for {
 		select {
 		case <-signal_1:

@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/kvark128/minimp3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -34,11 +35,27 @@ func main() {
 			if err != nil {
 				in.Close()
 				output.Stop()
+				return
 				// sig <- struct{}{}
 			}
 		}
 	}()
-
+	go func() {
+		file, _ := os.Open("rightforyou.mp3")
+		decoder := minimp3.NewDecoder(file)
+		for {
+			buff := make([]byte, 1024)
+			n, err := decoder.Read(buff)
+			if err != nil {
+				return
+			}
+			// .Write(buff[0:n])
+			client.Send(&protobuf.Client_MSGSound{
+				Sound: buff[0:n],
+			})
+		}
+		// portaudio.Initialize()
+	}()
 	go func() {
 		output.Play()
 	}()
@@ -51,10 +68,10 @@ func main() {
 	// 	}
 	// }()
 	<-sigs
-	// client.CloseSend()
-	client.Send(&protobuf.Client_MSGSound{
-		Sound: []byte("Goodbye!!"),
-	})
+	client.CloseSend()
+	// client.Send(&protobuf.Client_MSGSound{
+	// 	Sound: []byte("Goodbye!!"),
+	// })
 
 	log.Println("CloseSend signal is sent!!!")
 	in.Close()

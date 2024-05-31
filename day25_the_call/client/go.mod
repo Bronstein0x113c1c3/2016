@@ -4,6 +4,7 @@ go 1.22.3
 
 require (
 	github.com/gordonklaus/portaudio v0.0.0-20230709114228-aafa478834f5
+	github.com/kvark128/minimp3 v0.0.0-20220408223524-dd428325fce7
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.1
 )

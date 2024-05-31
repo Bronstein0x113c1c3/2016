@@ -21,13 +21,13 @@ func (o *Output) Play() {
 func (o *Output) Pause() {
 	o.stop_signal <- "pause"
 }
-func New(buffer_size int, input_stream io.Reader) (*Output, error) {
+func New(buffer_size int, input_stream io.Reader, sample_rate float64) (*Output, error) {
 	err := portaudio.Initialize()
 	if err != nil {
 		return nil, err
 	}
 	buf := make([]int16, buffer_size)
-	reading, err := portaudio.OpenDefaultStream(0, 2, 16000, len(buf), &buf)
+	reading, err := portaudio.OpenDefaultStream(0, 2, sample_rate, len(buf), &buf)
 	if err != nil {
 		return nil, err
 	}
