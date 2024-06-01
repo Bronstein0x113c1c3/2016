@@ -30,7 +30,7 @@ func main() {
 		grpc.WithContextDialer(dialer),
 		grpc.WithTransportCredentials(creds),
 	}
-	net, err := grpc.Dial("localhost:8080", grpcOpts...)
+	net, err := grpc.Dial("192.168.1.4:8080", grpcOpts...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func main() {
 	go func() {
 		stream := input.GetStream()
 		for {
-			data := make([]byte, 1024)
+			data := make([]byte, 4096)
 			n, err := stream.Read(data)
 			if err != nil {
 				log.Println("EOF signal received!!! Stream is stopped!!! Start to closing data channel")
@@ -72,7 +72,7 @@ func main() {
 	}()
 	go func() {
 		output.Play()
-		input.Play()
+		// input.Play()
 	}()
 
 	<-sigs

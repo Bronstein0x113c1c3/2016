@@ -79,7 +79,7 @@ func New(buffer_size int) (*Input, error) {
 			stream.Read()
 			// x := buffer
 			binary.Write(in, binary.LittleEndian, buffer)
-
+			clear(buffer)
 			select {
 			case x := <-signal:
 
