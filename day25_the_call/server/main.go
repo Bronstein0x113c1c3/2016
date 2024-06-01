@@ -26,7 +26,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	log.Println("The microphone input is initiated")
-	service := caller.New("127.0.0.1", 8080)
+	service := caller.New("192.168.1.4", 8080)
 	grpc_helper := grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 
 	pb.RegisterTheCallServer(grpc_helper, service)
@@ -93,7 +93,7 @@ func main() {
 	go func() {
 		stream := input.GetStream()
 		for {
-			data := make([]byte, 1024)
+			data := make([]byte, 4096)
 			n, err := stream.Read(data)
 			if err != nil {
 				log.Println("EOF signal received!!! Stream is stopped!!! Start to closing data channel")
