@@ -1,0 +1,10 @@
+{
+    "protoc":{
+        "path": "/usr/bin/protoc",
+        "options": [
+            "-I=.",
+            "--go_out=.",
+            "--go-grpc_out=."
+        ]
+    }
+}
