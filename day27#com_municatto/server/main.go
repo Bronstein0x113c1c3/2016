@@ -16,7 +16,7 @@ import (
 func main() {
 	defer log.Println("Closed completed!!!")
 	input_chan := make(chan serverimpl.Chunk)
-	server := serverimpl.New("127.0.0.1", 8080, input_chan)
+	server := serverimpl.New("", 8080, input_chan)
 	grpc_helper := grpc.NewServer()
 	protobuf.RegisterCallingServer(grpc_helper, server)
 	defer close(input_chan)
@@ -60,7 +60,7 @@ func main() {
 				}
 
 			case data, ok := <-input_chan:
-
+				_, _, id := data.Get()
 				if !ok {
 					log.Println("Channel is forcibly closed")
 					for i := range server.Output {
@@ -70,7 +70,7 @@ func main() {
 					}
 				}
 				for i := range server.Output {
-					if server.Output[i] != nil {
+					if server.Output[i] != nil && id != i {
 						server.Output[i] <- data
 					}
 				}
