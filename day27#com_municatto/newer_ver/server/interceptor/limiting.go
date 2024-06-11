@@ -28,7 +28,7 @@ func Limiting(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo
 	if a <= 0 {
 		// log.Printf("remaining %v connections... \n", a)
 		log.Println("Out of slots")
-		return status.Error(codes.Canceled, "out of slots, cancelled!!!")
+		return status.Error(codes.ResourceExhausted, "out of slots, cancelled!!!")
 	}
 	log.Println("Accepted!!!")
 	ConnLimit <- struct{}{}
