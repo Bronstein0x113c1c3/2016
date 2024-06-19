@@ -20,7 +20,7 @@ func main() {
 	input_chan := make(chan serverimpl.Chunk)
 	server := serverimpl.New("", 8080, input_chan)
 	grpc_helper := grpc.NewServer(grpc.ChainStreamInterceptor(interceptor.Limiting, interceptor.ChannelFinding(server)))
-
+	defer close(interceptor.ConnLimit)
 	protobuf.RegisterCallingServer(grpc_helper, server)
 	defer close(input_chan)
 	defer grpc_helper.GracefulStop()
@@ -60,6 +60,7 @@ func main() {
 					log.Printf("%v is requested for deletion \n", i)
 					close(server.Output[i])
 					server.Output[i] = nil
+					<-interceptor.ConnLimit
 					continue
 				}
 
