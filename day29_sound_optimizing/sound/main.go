@@ -15,23 +15,24 @@ import (
 const (
 	DefaultBitDepth       = 16
 	DefaultChannels       = 2
-	DefaultSampleRate     = 48000
-	DefaultFrameSize      = 480
+	DefaultSampleRate     = 24000
+	DefaultFrameSize      = 240
 	DefaultOpusDataLength = 1000
 )
 
 func mp3_to_opus(filename string, data_chan chan []byte, wg *sync.WaitGroup) {
-	encoder, err := opus.NewEncoder(DefaultSampleRate, DefaultChannels, opus.AppAudio)
-	if err != nil {
-		log.Println("Cannot set the encoder!!!")
-		return
-	}
+	defer wg.Done()
 	mp3_file, err := os.Open("305.mp3")
 	if err != nil {
 		log.Println("cannot open file!!!!!")
 	}
 	mp3_decoder := minimp3.NewDecoder(mp3_file)
-	defer wg.Done()
+	encoder, err := opus.NewEncoder(DefaultSampleRate, DefaultChannels, opus.AppVoIP)
+	if err != nil {
+		log.Println("Cannot set the encoder!!!")
+		return
+	}
+
 	defer close(data_chan)
 	for {
 		input := make([]int16, DefaultFrameSize)
@@ -54,7 +55,7 @@ func opus_to_mp3(data_chan chan []byte, wg *sync.WaitGroup) {
 	output := make([]int16, DefaultFrameSize)
 	portaudio.Initialize()
 	defer portaudio.Terminate()
-	streamer, err := portaudio.OpenDefaultStream(0, DefaultChannels, DefaultSampleRate, DefaultFrameSize, &output)
+	streamer, err := portaudio.OpenDefaultStream(0, DefaultChannels, 44100, DefaultFrameSize, &output)
 	streamer.Start()
 	defer streamer.Stop()
 	for data := range data_chan {
