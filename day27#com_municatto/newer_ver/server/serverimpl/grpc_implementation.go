@@ -6,7 +6,7 @@ import (
 	pb "serv/protobuf"
 )
 
-// implement /run/media/jonathan0x113c1c3/New Volume/immortal/2016/day27#com_municatto/protobuf/protobuffor each connection to server
+// implement for each connection to server
 func (s *Server) VoIP(conn pb.Calling_VoIPServer) error {
 	// pb.ClientMSG
 
@@ -20,7 +20,7 @@ func (s *Server) VoIP(conn pb.Calling_VoIPServer) error {
 	// id := 0
 
 	id := conn.Context().Value(helper.T("channel")).(int)
-	log.Println(id)
+	// log.Println(id)
 	// id := 0
 	sig1 := make(chan struct{})
 	sig2 := make(chan struct{})

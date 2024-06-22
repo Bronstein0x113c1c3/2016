@@ -64,7 +64,8 @@ func (s *Server) delete_chan(i int, closed bool) {
 		return
 	}
 	log.Printf("Released %v!!!", i)
-	return
+
+	// return
 }
 
 // func

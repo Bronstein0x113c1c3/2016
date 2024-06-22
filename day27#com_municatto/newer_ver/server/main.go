@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/signal"
+	"serv/http3"
 	"serv/interceptor"
 	"serv/protobuf"
 	"serv/serverimpl"
@@ -15,35 +15,37 @@ import (
 )
 
 func main() {
+
 	defer log.Println("Closed completed!!!")
 	input_chan := make(chan serverimpl.Chunk)
 	server := serverimpl.New("", 8080, input_chan)
 	grpc_helper := grpc.NewServer(grpc.ChainStreamInterceptor(interceptor.Limiting, interceptor.ChannelFinding(server)))
-
+	defer close(interceptor.ConnLimit)
 	protobuf.RegisterCallingServer(grpc_helper, server)
 	defer close(input_chan)
 	defer grpc_helper.GracefulStop()
 	log.Printf("Setting up done!!! %v \n", fmt.Sprintf("%v", *server))
-	lis, err := net.Listen("tcp", fmt.Sprint(server))
+
+	// lis, err := net.Listen("tcp", fmt.Sprint(server))
+
+	lis, err := http3.NewConn("caller", fmt.Sprint(server))
+	defer lis.Close()
 	if err != nil {
 		log.Fatalln(err)
 		return
 	}
-
 	sigs := make(chan os.Signal, 1)
 	done := make(chan struct{})
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		defer func() {
-			for _, client := range server.Output {
-				if client != nil {
-					close(client)
-				}
+	defer func() {
+		for _, client := range server.Output {
+			if client != nil {
+				close(client)
 			}
-		}()
+		}
+	}()
+	go func() {
 		for {
-
 			select {
 			case <-sigs:
 				done <- struct{}{}
@@ -58,6 +60,7 @@ func main() {
 					log.Printf("%v is requested for deletion \n", i)
 					close(server.Output[i])
 					server.Output[i] = nil
+					<-interceptor.ConnLimit
 					continue
 				}
 
