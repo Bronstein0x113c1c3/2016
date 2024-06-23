@@ -52,7 +52,6 @@ func (i *Input) Process() {
 		i.stream.Read()
 		data := make([]byte, 3000)
 		n, err := i.encoder.Encode(i.buf, data)
-		// log.Println("data transfered: ", n)
 		if err != nil {
 			return
 		}
