@@ -1,0 +1,66 @@
+2024/07/13 23:22:05 change detected!!!
+new source for C: A with distance 1, segment 1 
+2024/07/13 23:22:05 change detected!!!
+new source for D: A with distance 2, segment 2 
+the distance table:
+         A|         B|         C|         D|         E|         F|         G|
+         0|       inf|         1|         2|       inf|       inf|       inf|
+the linking table:
+         A|         B|         C|         D|         E|         F|         G|
+     undef|     undef|         A|         A|     undef|     undef|     undef|
+2024/07/13 23:22:05 it's visited!!!!
+2024/07/13 23:22:05 unchanged!!!
+2024/07/13 23:22:05 change detected!!!
+new source for B: C with distance 3, segment 2 
+2024/07/13 23:22:05 change detected!!!
+new source for E: C with distance 4, segment 3 
+the distance table:
+         A|         B|         C|         D|         E|         F|         G|
+         0|         3|         1|         2|         4|       inf|       inf|
+the linking table:
+         A|         B|         C|         D|         E|         F|         G|
+     undef|         C|         A|         A|         C|     undef|     undef|
+2024/07/13 23:22:05 it's visited!!!!
+2024/07/13 23:22:05 it's visited!!!!
+2024/07/13 23:22:05 change detected!!!
+new source for G: D with distance 3, segment 1 
+the distance table:
+         A|         B|         C|         D|         E|         F|         G|
+         0|         3|         1|         2|         4|       inf|         3|
+the linking table:
+         A|         B|         C|         D|         E|         F|         G|
+     undef|         C|         A|         A|         C|     undef|         D|
+2024/07/13 23:22:05 it's visited!!!!
+2024/07/13 23:22:05 change detected!!!
+new source for F: B with distance 6, segment 3 
+the distance table:
+         A|         B|         C|         D|         E|         F|         G|
+         0|         3|         1|         2|         4|         6|         3|
+the linking table:
+         A|         B|         C|         D|         E|         F|         G|
+     undef|         C|         A|         A|         C|         B|         D|
+2024/07/13 23:22:05 it's visited!!!!
+2024/07/13 23:22:05 change detected!!!
+new source for F: G with distance 4, segment 1 
+the distance table:
+         A|         B|         C|         D|         E|         F|         G|
+         0|         3|         1|         2|         4|         4|         3|
+the linking table:
+         A|         B|         C|         D|         E|         F|         G|
+     undef|         C|         A|         A|         C|         G|         D|
+2024/07/13 23:22:05 it's visited!!!!
+2024/07/13 23:22:05 unchanged!!!
+the distance table:
+         A|         B|         C|         D|         E|         F|         G|
+         0|         3|         1|         2|         4|         4|         3|
+the linking table:
+         A|         B|         C|         D|         E|         F|         G|
+     undef|         C|         A|         A|         C|         G|         D|
+the distance table:
+         A|         B|         C|         D|         E|         F|         G|
+         0|         3|         1|         2|         4|         4|         3|
+the linking table:
+         A|         B|         C|         D|         E|         F|         G|
+     undef|         C|         A|         A|         C|         G|         D|
+the route...
+A---->D---->G---->F

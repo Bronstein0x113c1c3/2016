@@ -52,6 +52,6 @@ func main() {
 	// }
 	// log.Printf("[gRPC]: %v\n", req.Songs)
 	GetAll(grpcClient)
-	PlayMusic(54, grpcClient)
+	PlayMusic(58, grpcClient)
 
 }

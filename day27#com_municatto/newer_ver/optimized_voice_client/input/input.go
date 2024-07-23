@@ -13,11 +13,12 @@ type Input struct {
 	buf       []int16
 	encoder   *opus.Encoder
 	wg        *sync.WaitGroup
+	byte_len  int
 	signal    chan struct{}
 	data_chan chan []byte
 }
 
-func InputInit(channel int, sample_rate float32, buffer_size int, wg *sync.WaitGroup) (*Input, error) {
+func InputInit(channel int, sample_rate float32, buffer_size int, data_length int, wg *sync.WaitGroup) (*Input, error) {
 	portaudio.Initialize()
 	buf := make([]int16, buffer_size)
 	streamer, err := portaudio.OpenDefaultStream(channel, 0, float64(sample_rate), buffer_size, &buf)
@@ -30,7 +31,8 @@ func InputInit(channel int, sample_rate float32, buffer_size int, wg *sync.WaitG
 		portaudio.Terminate()
 		return nil, err
 	}
-	data_chan := make(chan []byte, 1000)
+	// len := int(int(sample_rate) / channel / 1000/)
+	data_chan := make(chan []byte, data_length)
 	return &Input{
 		stream:    streamer,
 		encoder:   encoder,
@@ -38,6 +40,7 @@ func InputInit(channel int, sample_rate float32, buffer_size int, wg *sync.WaitG
 		buf:       buf,
 		signal:    make(chan struct{}),
 		data_chan: data_chan,
+		byte_len:  data_length,
 	}, nil
 }
 
@@ -50,7 +53,7 @@ func (i *Input) Process() {
 	defer i.stream.Stop()
 	for {
 		i.stream.Read()
-		data := make([]byte, 3000)
+		data := make([]byte, i.byte_len)
 		n, err := i.encoder.Encode(i.buf, data)
 		if err != nil {
 			return

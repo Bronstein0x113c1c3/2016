@@ -1,0 +1,11 @@
+syntax = "proto3";
+option go_package = "/protobuf";
+message Request{
+    int32 x = 1;
+}
+message Response{
+    int32 x = 1;
+}
+service App{
+    rpc Sending (stream Request) returns (stream Response);
+}

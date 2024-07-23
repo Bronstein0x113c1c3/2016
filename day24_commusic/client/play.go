@@ -52,7 +52,7 @@ func receiver(streamer pb.Player_PlaySongClient) chan [][2]float64 {
 				fmt.Printf("Id: %v \nName: %v \nArtist: %v \nAlbum: %v \nTrack: %v \nYear: %v \n", id, song_name, artist, album, track, year)
 			case *pb.SongData_Chunks:
 				sound_stream <- processing_msg(x.Chunks.GetC())
-				log.Println("Receving chunk...")
+				// log.Println("Receving chunk...")
 			}
 		}
 	}()
@@ -63,7 +63,7 @@ func player(sound_chan chan [][2]float64) error {
 	sr := beep.SampleRate(44100)
 	speaker.Init(sr, sr.N(time.Second*2))
 	streamer := newStreamer(sound_chan, done)
-	new_s := beep.Resample(40, sr, beep.SampleRate(44100), streamer)
+	new_s := beep.Resample(40, sr, beep.SampleRate(48000), streamer)
 	speaker.Play(new_s)
 	<-done
 	return nil

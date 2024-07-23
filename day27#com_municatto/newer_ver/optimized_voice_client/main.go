@@ -52,7 +52,7 @@ func main() {
 	wg := &sync.WaitGroup{}
 
 	log.Println("connected, init the i/o...")
-	input, err := input.InputInit(DefaultChannels, DefaultSampleRate, DefaultFrameSize, wg)
+	input, err := input.InputInit(DefaultChannels, DefaultSampleRate, DefaultFrameSize, DefaultOpusDataLength, wg)
 	if err != nil {
 		return
 	}

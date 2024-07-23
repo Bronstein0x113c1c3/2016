@@ -5,5 +5,5 @@ const (
 	DefaultChannels       = 2
 	DefaultSampleRate     = 48000
 	DefaultFrameSize      = 480
-	DefaultOpusDataLength = 1000
+	DefaultOpusDataLength = 500
 )
