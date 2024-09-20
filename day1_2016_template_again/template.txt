@@ -1,0 +1,3 @@
+{{- range . }}
+| {{ .Name | printf "%-20v" }} |
+{{- end -}}
